@@ -13,6 +13,7 @@ const hours = Array.from({ length: 24 }, (_, i) => i); // [0, 1, 2, ..., 23]
 
 function App() {
   const [selectedHeadset, setSelectedHeadset] = useState(null);
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
 
   const handleHeadsetClick = (id) => {
     setSelectedHeadset(selectedHeadset === id ? null : id);
@@ -21,6 +22,10 @@ function App() {
   const handleBooking = (headsetId, hour) => {
     console.log(`Booking VR Headset ${headsetId} for ${hour}:00`);
     // Здесь можно добавить логику бронирования
+  };
+
+  const handleThemeToggle = () => {
+    setIsDarkTheme(!isDarkTheme);
   };
 
   const columns = [
@@ -56,9 +61,12 @@ function App() {
   }));
 
   return (
-    <div className="app-container">
-      <h1 style={{ color: "white" }}>VR Headset Booking</h1>
+    <div className={`app-container ${isDarkTheme ? 'dark' : 'light'}`}>
+      <h1>VR Headset Booking</h1>
       <div style={{ marginBottom: "20px" }}>
+        <Button onClick={handleThemeToggle} style={{ margin: "5px" }}>
+          {isDarkTheme ? "Светлая тема" : "Темная тема"}
+        </Button>
         {vrHeadsets.map((headset) => (
           <Button
             key={headset.id}

@@ -1,0 +1,54 @@
+/* Темный фон для всего приложения */
+.app-container {
+    background-color: #333;
+    color: white;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  /* Стили для таблицы */
+  .table-row-light {
+    background-color: #444; /* Светлый оттенок для полоски */
+  }
+  
+  .table-row-dark {
+    background-color: #222; /* Темный оттенок для полоски */
+    color: white;
+  }
+  
+  /* Темный фон для заголовков таблицы */
+  .ant-table-thead > tr > th {
+    background-color: #333; /* Темный фон заголовков */
+    color: white;
+    border-right: 1px solid #555; /* Разграничивающие полоски */
+  }
+  
+  /* Темный фон для ячеек таблицы */
+  .ant-table-tbody > tr > td {
+    background-color: inherit; /* Унаследование фона строки */
+    color: white;
+    border-right: 1px solid #555; /* Разграничивающие полоски */
+    padding: 4px; /* Уменьшение отступов */
+  }
+  
+  /* Уменьшение расстояния между столбцами */
+  .ant-table {
+    table-layout: fixed;
+  }
+  
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .ant-table-small .ant-table-thead > tr > th {
+    padding: 4px;
+  }
+  
+  .ant-table-small .ant-table-tbody > tr > td:last-child,
+  .ant-table-small .ant-table-thead > tr > th:last-child {
+    border-right: 0;
+  }
+  

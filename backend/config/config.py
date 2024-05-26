@@ -15,3 +15,5 @@ if CORS_ORIGINS:
     CORS_ORIGINS = eval(CORS_ORIGINS)
 else:
     print('CORS_ORIGINS not set in environment')
+
+SECRET_JWT = os.environ.get("SECRET_JWT")

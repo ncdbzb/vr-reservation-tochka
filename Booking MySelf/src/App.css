@@ -55,7 +55,7 @@
 
 /* Дополнительные стили для светлой темы */
 .app-container.light .table-row-light {
-  background-color: #e0e0e0;
+  background-color: #f9f9f9;
 }
 
 .app-container.light .table-row-dark {
@@ -85,4 +85,29 @@
 .ant-table-tbody > tr:hover > td {
   color: black !important; /* Цвет текста при наведении */
   background-color: #f0f0f0 !important; /* Светлый фон при наведении */
+}
+
+/* Специфические стили для темной темы */
+.app-container.dark .ant-table-tbody > tr:hover > td {
+  color: black !important; /* Цвет текста при наведении */
+}
+
+.app-container.dark .ant-table-tbody > tr > td {
+  color: white; /* Цвет текста по умолчанию */
+}
+
+/* Стиль для правого верхнего угла */
+.theme-toggle-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+/* Стиль для контейнера кнопок в правом верхнем углу */
+.top-right-buttons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 10px;
 }

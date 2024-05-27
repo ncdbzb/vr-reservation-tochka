@@ -1,0 +1,17 @@
+FROM node:17-alpine as build
+
+WORKDIR /vr_reservation_tochka/frontend
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+FROM nginx:stable-alpine
+
+COPY --from=build /vr_reservation_tochka/frontend/dist /usr/share/nginx/html
+COPY --from=build /vr_reservation_tochka/frontend/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+CMD ["nginx", "-g", "daemon off;"]

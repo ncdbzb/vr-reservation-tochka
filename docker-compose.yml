@@ -27,6 +27,7 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - redis
 
   frontend:
     build:
@@ -40,6 +41,11 @@ services:
     restart: always
     depends_on:
       - backend
+
+  redis:
+    image: redis:7.0.11-alpine
+    ports:
+      - "6379:6379"
 
   pgadmin:
     image: dpage/pgadmin4:latest

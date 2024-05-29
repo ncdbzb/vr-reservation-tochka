@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { Button, Table, Switch } from "antd";
+import { Button, Table, Switch, Modal } from "antd";
 import "antd/dist/reset.css"; // Импорт стилей Ant Design
 import "./App.css"; // Импорт пользовательских стилей
+import RegisterForm from './RegisterForm';
+import LoginForm from './LoginForm';
 
 const vrHeadsets = [
   { id: 1, name: "VR Headset 1" },
@@ -17,6 +19,8 @@ function App() {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [emailNotification, setEmailNotification] = useState(false);
+  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
 
   const handleHeadsetClick = (id) => {
     setSelectedHeadset(selectedHeadset === id ? null : id);
@@ -53,6 +57,22 @@ function App() {
 
   const handleEmailNotificationToggle = () => {
     setEmailNotification(!emailNotification);
+  };
+
+  const showRegisterModal = () => {
+    setIsRegisterModalVisible(true);
+  };
+
+  const handleRegisterModalCancel = () => {
+    setIsRegisterModalVisible(false);
+  };
+
+  const showLoginModal = () => {
+    setIsLoginModalVisible(true);
+  };
+
+  const handleLoginModalCancel = () => {
+    setIsLoginModalVisible(false);
   };
 
   const columns = [
@@ -135,13 +155,32 @@ function App() {
   return (
     <div className={`app-container ${isDarkTheme ? 'dark' : 'light'}`}>
       <div className="top-right-buttons">
-        <Button>
-          Авторизация и вход
+        <Button onClick={showRegisterModal}>
+          Регистрация
+        </Button>
+        <Button onClick={showLoginModal}>
+          Вход
         </Button>
         <Button onClick={handleThemeToggle}>
           {isDarkTheme ? "Светлая тема" : "Темная тема"}
         </Button>
       </div>
+      <Modal
+        title="Регистрация"
+        visible={isRegisterModalVisible}
+        footer={null}
+        onCancel={handleRegisterModalCancel}
+      >
+        <RegisterForm />
+      </Modal>
+      <Modal
+        title="Вход"
+        visible={isLoginModalVisible}
+        footer={null}
+        onCancel={handleLoginModalCancel}
+      >
+        <LoginForm />
+      </Modal>
       <h1>VR Headset Booking</h1>
       <div style={{ marginBottom: "20px" }}>
         <div style={{ marginBottom: "10px" }}>

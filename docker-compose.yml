@@ -44,18 +44,20 @@ services:
 
   redis:
     image: redis:7.0.11-alpine
+    env_file:
+      - .env
     ports:
-      - "6379:6379"
+      - ${REDIS_PORT}:${REDIS_PORT}
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pg_admin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:  
-      - "8888:80"
-    restart: always
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: pg_admin
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:  
+  #     - "8888:80"
+  #   restart: always
 
 volumes:
   pgdata_tochka:

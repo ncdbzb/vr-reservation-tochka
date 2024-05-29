@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr
 
 
-class UserSchema(BaseModel):
+class UserCreate(BaseModel):
     email: EmailStr
     password: str
     is_active: bool | None = True
@@ -11,3 +11,13 @@ class UserSchema(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserSchema(BaseModel):
+    email: EmailStr
+    hashed_password: str
+    is_active: bool
+    is_superuser: bool
+
+    class Config:
+        from_attributes = True

@@ -10,3 +10,6 @@ restart:
 
 logs:
 	docker compose logs -f
+
+migrate:
+	docker compose exec backend poetry run alembic upgrade head

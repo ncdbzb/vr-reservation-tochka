@@ -209,7 +209,7 @@ function App() {
         footer={null}
         onCancel={handleLoginModalCancel}
       >
-        <LoginForm />
+        <LoginForm onLoginSuccess={setUser} />
       </Modal>
       <h1>VR Headset Booking</h1>
       <div style={{ marginBottom: "20px" }}>

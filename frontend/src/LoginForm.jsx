@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import axios from 'axios';
 
-const LoginForm = () => {
+const LoginForm = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
@@ -17,6 +17,7 @@ const LoginForm = () => {
         }
       });
       message.success('Авторизация прошла успешно!');
+      onLoginSuccess(response.data); // Обновление состояния пользователя в App
     } catch (error) {
       message.error('Ошибка авторизации!');
     } finally {

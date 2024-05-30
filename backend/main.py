@@ -4,9 +4,7 @@ from fastapi import FastAPI, Depends
 from starlette.middleware.cors import CORSMiddleware
 # from fastapi_jsonrpc import API, JsonRpcRouter
 from src.auth.auth_router import router as auth_router
-from src.services.celery_service import send_email_task
-from src.schemas.user_schema import UserSchema
-from src.auth.utils.jwt_manager import get_current_user
+from src.routers.users_router import router as users_router
 
 from config.config import CORS_ORIGINS
 
@@ -28,10 +26,10 @@ app.include_router(
     auth_router,
     prefix="/auth"
 )
-
-@app.get('/')
-async def hello(user: UserSchema = Depends(get_current_user)):
-    return user
+app.include_router(
+    users_router,
+    prefix="/users"
+)
 
 # @app.get("/send_mail")
 # async def send_mail():

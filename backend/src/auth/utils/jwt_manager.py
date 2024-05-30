@@ -57,7 +57,7 @@ class JWTManager():
     async def get_token_from_cookie(self, request: Request) -> str:
         token = request.cookies.get(self.cookie_name)
         if not token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Not authorized')
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorized')
         return token
     
     def get_user_id_by_token(self, token: str) -> str:
@@ -65,9 +65,9 @@ class JWTManager():
             payload = jwt.decode(token, SECRET_JWT, algorithms=[JWT_ALGORITHM])
             user_id = payload.get('sub')
             if user_id is None:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Not authorized')
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorized')
         except Exception:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Not authorized')
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorized')
         return user_id
     
 

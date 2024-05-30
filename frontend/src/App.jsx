@@ -1,9 +1,11 @@
-import React, { useState } from "react";
-import { Button, Table, Switch, Modal } from "antd";
+import React, { useState, useEffect } from "react";
+import { Button, Table, Switch, Modal, message } from "antd";
+import axios from "axios";
 import "antd/dist/reset.css"; // Импорт стилей Ant Design
 import "./App.css"; // Импорт пользовательских стилей
 import RegisterForm from './RegisterForm';
 import LoginForm from './LoginForm';
+import LogoutButton from './LogoutButton';
 
 const vrHeadsets = [
   { id: 1, name: "VR Headset 1" },
@@ -21,6 +23,22 @@ function App() {
   const [emailNotification, setEmailNotification] = useState(false);
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get('http://localhost/api/users/me', {
+          withCredentials: true
+        });
+        setUser(response.data);
+      } catch (error) {
+        setUser(null);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const handleHeadsetClick = (id) => {
     setSelectedHeadset(selectedHeadset === id ? null : id);
@@ -75,6 +93,10 @@ function App() {
     setIsLoginModalVisible(false);
   };
 
+  const handleLogout = () => {
+    setUser(null);
+  };
+
   const columns = [
     {
       title: "Time",
@@ -113,7 +135,7 @@ function App() {
       render: (text, record) => {
         const bookingKey = `${selectedHeadset}-${record.key}`;
         const isBooked = bookings[bookingKey];
-        return isBooked ? (
+        return isBooked && user?.is_admin ? (
           <>
             <Button
               type="primary"
@@ -155,12 +177,20 @@ function App() {
   return (
     <div className={`app-container ${isDarkTheme ? 'dark' : 'light'}`}>
       <div className="top-right-buttons">
-        <Button onClick={showRegisterModal}>
-          Регистрация
-        </Button>
-        <Button onClick={showLoginModal}>
-          Вход
-        </Button>
+        {user ? (
+          <>
+            <LogoutButton onLogout={handleLogout} />
+          </>
+        ) : (
+          <>
+            <Button onClick={showRegisterModal}>
+              Регистрация
+            </Button>
+            <Button onClick={showLoginModal}>
+              Вход
+            </Button>
+          </>
+        )}
         <Button onClick={handleThemeToggle}>
           {isDarkTheme ? "Светлая тема" : "Темная тема"}
         </Button>

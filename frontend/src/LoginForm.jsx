@@ -14,12 +14,13 @@ const LoginForm = ({ onLoginSuccess }) => {
       }, {
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        withCredentials: true,
       });
       message.success('Авторизация прошла успешно!');
-      onLoginSuccess(response.data); // Обновление состояния пользователя в App
+      onLoginSuccess(response.data); // Передача данных пользователя в App
     } catch (error) {
-      message.error('Ошибка авторизации!');
+      message.error('Ошибка при входе!');
     } finally {
       setLoading(false);
     }
@@ -51,3 +52,4 @@ const LoginForm = ({ onLoginSuccess }) => {
 };
 
 export default LoginForm;
+

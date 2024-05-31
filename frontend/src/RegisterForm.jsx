@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import axios from 'axios';
 
-const RegisterForm = () => {
+const RegisterForm = ({ onRegisterSuccess }) => {
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
@@ -14,11 +14,14 @@ const RegisterForm = () => {
       }, {
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        withCredentials: true,
       });
-      message.success('Регистрация прошла успешно!');
+
+      message.success('Вы успешно зарегистрировались!');
+      onRegisterSuccess(response.data); // Передача данных пользователя в App
     } catch (error) {
-      message.error('Ошибка регистрации!');
+      message.error('Ошибка при регистрации!');
     } finally {
       setLoading(false);
     }

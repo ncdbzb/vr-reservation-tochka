@@ -40,6 +40,13 @@ function App() {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      setIsLoginModalVisible(false);
+      setIsRegisterModalVisible(false);
+    }
+  }, [user]);
+
   const handleHeadsetClick = (id) => {
     setSelectedHeadset(selectedHeadset === id ? null : id);
   };
@@ -93,8 +100,16 @@ function App() {
     setIsLoginModalVisible(false);
   };
 
-  const handleLogout = () => {
-    setUser(null);
+  const handleLogout = async () => {
+    try {
+      await axios.post('http://localhost/api/auth/logout', {}, {
+        withCredentials: true
+      });
+      message.success('Вы успешно вышли!');
+      setUser(null);
+    } catch (error) {
+      message.error('Ошибка при выходе!');
+    }
   };
 
   const columns = [
@@ -201,7 +216,10 @@ function App() {
         footer={null}
         onCancel={handleRegisterModalCancel}
       >
-        <RegisterForm />
+        <RegisterForm onRegisterSuccess={(user) => {
+          setUser(user);
+          setIsRegisterModalVisible(false);
+        }} />
       </Modal>
       <Modal
         title="Вход"
@@ -209,7 +227,10 @@ function App() {
         footer={null}
         onCancel={handleLoginModalCancel}
       >
-        <LoginForm onLoginSuccess={setUser} />
+        <LoginForm onLoginSuccess={(user) => {
+          setUser(user);
+          setIsLoginModalVisible(false);
+        }} />
       </Modal>
       <h1>VR Headset Booking</h1>
       <div style={{ marginBottom: "20px" }}>

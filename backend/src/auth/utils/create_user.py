@@ -3,6 +3,8 @@ from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.users import user
 from src.auth.utils.password_manager import PasswordManager
+from config.database import async_session_maker
+from config.config import ADMIN_EMAIL, ADMIN_PASSWORD
 
 
 async def create_user(user_dict: dict, session: AsyncSession):
@@ -15,15 +17,31 @@ async def create_user(user_dict: dict, session: AsyncSession):
     result = await session.execute(query)
 
     if result.fetchone():
+        if user_dict['email'] == ADMIN_EMAIL:
+            return
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User with this email alredy exists")
     
     hashed_password = await PasswordManager.get_hashed_password(password)
 
+    is_superuser: bool = False if user_dict['email'] != ADMIN_EMAIL else True
+
     try:
-        stmt = insert(user).values(email=user_dict['email'], hashed_password=str(hashed_password), is_active=True, is_superuser=False)
+        stmt = insert(user).values(email=user_dict['email'], hashed_password=str(hashed_password), is_active=True, is_superuser=is_superuser)
         await session.execute(stmt)
         await session.commit()
-        return {'status': 'Successful registration!'}
+        return {'status': 'success'}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e)
-    
+
+
+async def create_admin_user():
+    async with async_session_maker() as session:
+        result = await create_user(
+            user_dict={
+                'email': ADMIN_EMAIL,
+                'password': ADMIN_PASSWORD
+            },
+            session=session
+        )
+    if result:
+        print('admin account created')

@@ -1,9 +1,10 @@
 import uvicorn
-
+import asyncio
 from fastapi import FastAPI, Depends
 from starlette.middleware.cors import CORSMiddleware
 # from fastapi_jsonrpc import API, JsonRpcRouter
 from src.auth.auth_router import router as auth_router
+from src.auth.utils.create_user import create_admin_user
 from src.routers.users_router import router as users_router
 
 from config.config import CORS_ORIGINS
@@ -40,10 +41,17 @@ app.include_router(
 #     else:
 #         raise HTTPException(status_code=500, detail='error')
 
+async def main():
+    await create_admin_user()
 
-if __name__ == "__main__":
-    uvicorn.run(
+    config = uvicorn.Config(
         app,
         host="0.0.0.0",
         port=8000
     )
+    server = uvicorn.Server(config)
+    await server.serve()
+    
+
+if __name__ == "__main__":
+    asyncio.run(main())

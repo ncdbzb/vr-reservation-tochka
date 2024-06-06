@@ -24,6 +24,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [vrHeadsets, setVrHeadsets] = useState([]);
   const [busySlots, setBusySlots] = useState([]);
+  const [newCost, setNewCost] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -174,6 +175,20 @@ function App() {
     setIsLoginModalVisible(false);
   };
 
+  const handleChangeCost = async () => {
+    try {
+      await axios.post(
+        "http://localhost/api/bookings/change_cost",
+        { headset_id: selectedHeadset, new_cost: newCost },
+        { withCredentials: true }
+      );
+      message.success("Стоимость успешно изменена");
+      // Можно добавить обновление данных после изменения стоимости
+    } catch (error) {
+      message.error("Ошибка при изменении стоимости");
+    }
+  };
+
   const showMyBookingsModal = async () => {
     try {
       const response = await axios.get('http://localhost/api/bookings/my', {
@@ -221,18 +236,21 @@ function App() {
   useEffect(() => {
     const fetchAutoConfirmStatus = async () => {
       try {
-        const response = await axios.get('http://localhost/api/bookings/autoconfirm', {
-          withCredentials: true
-        });
-        setAutoConfirm(response.data.autoconfirm);
+        // Проверяем, является ли пользователь администратором
+        if (user && user.is_admin) {
+          const response = await axios.get('http://localhost/api/bookings/autoconfirm', {
+            withCredentials: true
+          });
+          setAutoConfirm(response.data.autoconfirm);
+        }
       } catch (error) {
         message.error('Ошибка при загрузке статуса автоподтверждения');
       }
     };
-
+  
     fetchAutoConfirmStatus();
   }, [user]);
-
+  
   const columns = [
     {
       title: "Time",
@@ -370,7 +388,7 @@ function App() {
         {user ? (
           <>
             <Button onClick={showMyBookingsModal}>Мои бронирования</Button>
-            {user.is_admin && (
+            {user && user.is_admin && (
               <>
                 <Button onClick={showAdminBookingsModal}>Бронирования на подтверждение</Button>
                 <div style={{ marginBottom: "10px" }}>
@@ -455,14 +473,29 @@ function App() {
         ))}
       </div>
       {selectedHeadset !== null && (
-        <Table
-          columns={columns}
-          dataSource={data}
-          pagination={false}
-          bordered
-          size="small"
-          rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
-        />
+        <>
+          {user && user.is_admin && (
+            <div style={{ marginBottom: "20px" }}>
+              <Input
+                value={newCost}
+                onChange={(e) => setNewCost(e.target.value)}
+                placeholder="Новая стоимость"
+                style={{ marginBottom: "10px", width: "200px" }}
+              />
+              <Button type="primary" onClick={handleChangeCost}>
+                Изменить стоимость
+              </Button>
+            </div>
+          )}
+          <Table
+            columns={columns}
+            dataSource={data}
+            pagination={false}
+            bordered
+            size="small"
+            rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
+          />
+        </>
       )}
     </div>
   );

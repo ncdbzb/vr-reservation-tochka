@@ -19,6 +19,7 @@ const LoginForm = ({ onLoginSuccess }) => {
       });
       message.success('Авторизация прошла успешно!');
       onLoginSuccess(response.data); // Передача данных пользователя в App
+      window.location.reload();
     } catch (error) {
       message.error('Ошибка при входе!');
     } finally {
@@ -52,4 +53,3 @@ const LoginForm = ({ onLoginSuccess }) => {
 };
 
 export default LoginForm;
-

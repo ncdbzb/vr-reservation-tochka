@@ -26,15 +26,23 @@ async def create_user(user_dict: dict, session: AsyncSession):
     is_superuser: bool = False if user_dict['email'] != ADMIN_EMAIL else True
 
     try:
-        stmt = insert(user).values(email=user_dict['email'], hashed_password=str(hashed_password), is_active=True, is_superuser=is_superuser)
+        stmt = insert(user).values(
+            email=user_dict['email'],
+            hashed_password=str(hashed_password),
+            is_active=True,
+            is_superuser=is_superuser,
+            is_subscribed_to_email=False
+        )
+        
         await session.execute(stmt)
         await session.commit()
+
         return {'status': 'success'}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e)
 
 
-async def create_admin_user():
+async def create_admin_user() -> None:
     async with async_session_maker() as session:
         result = await create_user(
             user_dict={

@@ -4,10 +4,12 @@ from fastapi import FastAPI, Depends
 from starlette.middleware.cors import CORSMiddleware
 # from fastapi_jsonrpc import API, JsonRpcRouter
 from src.auth.auth_router import router as auth_router
-from src.auth.utils.create_user import create_admin_user
 from src.routers.users_router import router as users_router
+from src.routers.headsets_router import router as headset_router
+from src.routers.bookings_router import router as booking_router
 
 from config.config import CORS_ORIGINS
+from config.init_db import init_db
 
 
 app = FastAPI(
@@ -31,6 +33,14 @@ app.include_router(
     users_router,
     prefix="/users"
 )
+app.include_router(
+    headset_router,
+    prefix="/bookings"
+)
+app.include_router(
+    booking_router,
+    prefix="/bookings"
+)
 
 # @app.get("/send_mail")
 # async def send_mail():
@@ -42,7 +52,7 @@ app.include_router(
 #         raise HTTPException(status_code=500, detail='error')
 
 async def main():
-    await create_admin_user()
+    await init_db()
 
     config = uvicorn.Config(
         app,

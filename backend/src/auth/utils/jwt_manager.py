@@ -89,3 +89,11 @@ async def get_current_user(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='User does not exists')
     
     return UserSchema.from_orm(current_user)
+
+
+async def get_current_superuser(
+    user_schema: UserSchema = Depends(get_current_user)
+) -> UserSchema:
+    if not user_schema.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='You do not have permissions to access this resource')
+    return user_schema

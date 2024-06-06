@@ -7,12 +7,6 @@ import RegisterForm from './RegisterForm';
 import LoginForm from './LoginForm';
 import LogoutButton from './LogoutButton';
 
-const vrHeadsets = [
-  { id: 1, name: "VR Headset 1" },
-  { id: 2, name: "VR Headset 2" },
-  { id: 3, name: "VR Headset 3" },
-];
-
 const hours = Array.from({ length: 24 }, (_, i) => i); // [0, 1, 2, ..., 23]
 
 function App() {
@@ -23,7 +17,13 @@ function App() {
   const [emailNotification, setEmailNotification] = useState(false);
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+  const [isMyBookingsModalVisible, setIsMyBookingsModalVisible] = useState(false);
+  const [isAdminBookingsModalVisible, setIsAdminBookingsModalVisible] = useState(false);
+  const [myBookings, setMyBookings] = useState([]);
+  const [adminBookings, setAdminBookings] = useState([]);
   const [user, setUser] = useState(null);
+  const [vrHeadsets, setVrHeadsets] = useState([]);
+  const [busySlots, setBusySlots] = useState([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -43,45 +43,119 @@ function App() {
   useEffect(() => {
     if (user) {
       setIsLoginModalVisible(false);
-      setIsRegisterModalVisible(false);
     }
   }, [user]);
 
-  const handleHeadsetClick = (id) => {
-    setSelectedHeadset(selectedHeadset === id ? null : id);
-  };
-
-  const handleBooking = (headsetId, hour) => {
-    const bookingKey = `${headsetId}-${hour}`;
-    setBookings((prevBookings) => {
-      const newBookings = { ...prevBookings };
-      if (newBookings[bookingKey]) {
-        delete newBookings[bookingKey];
-      } else {
-        newBookings[bookingKey] = {
-          price: "1000 руб.", // Пример цены
-          bookingTime: new Date().toLocaleString(),
-        };
+  useEffect(() => {
+    const fetchHeadsets = async () => {
+      try {
+        const response = await axios.get('http://localhost/api/bookings/headsets', {
+          withCredentials: true
+        });
+        setVrHeadsets(response.data.result);
+      } catch (error) {
+        message.error('Ошибка загрузки списка VR шлемов');
       }
-      return newBookings;
-    });
+    };
+
+    fetchHeadsets();
+  }, []);
+
+  const handleHeadsetClick = async (id) => {
+    setSelectedHeadset(selectedHeadset === id ? null : id);
+
+    if (selectedHeadset !== id) {
+      try {
+        const response = await axios.get(`http://localhost/api/bookings/${id}`, {
+          withCredentials: true
+        });
+        setBusySlots(response.data.result);
+      } catch (error) {
+        message.error('Ошибка загрузки занятых окон');
+      }
+    } else {
+      setBusySlots([]);
+    }
   };
 
-  const handleAdminAction = (action, headsetId, hour) => {
-    console.log(`Admin action: ${action} for VR Headset ${headsetId} at ${hour}:00`);
-    // Здесь добавьте логику для действий администратора
+  const handleBooking = async (headsetId, hour) => {
+    const bookingKey = `${headsetId}-${hour}`;
+    if (bookings[bookingKey]) {
+      setBookings((prevBookings) => {
+        const newBookings = { ...prevBookings };
+        delete newBookings[bookingKey];
+        return newBookings;
+      });
+    } else {
+      const startTime = new Date();
+      startTime.setHours(hour, 0, 0);
+      const endTime = new Date(startTime);
+      endTime.setHours(hour + 1);
+
+      try {
+        await axios.post('http://localhost/api/bookings/book', {
+          headset_id: headsetId,
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString()
+        }, {
+          withCredentials: true
+        });
+        setBookings((prevBookings) => ({
+          ...prevBookings,
+          [bookingKey]: {
+            price: "1000 руб.", // Пример цены
+            bookingTime: new Date().toLocaleString(),
+          },
+        }));
+        message.success('Бронирование успешно создано');
+      } catch (error) {
+        message.error('Ошибка при создании бронирования');
+      }
+    }
+  };
+
+  const handleAdminAction = async (action, bookingId) => {
+    try {
+      await axios.post(`http://localhost/api/bookings/${bookingId}/${action}`, {}, {
+        withCredentials: true
+      });
+      setAdminBookings((prevBookings) => prevBookings.filter(booking => booking.booking_id !== bookingId));
+      message.success(`Бронирование успешно ${action === 'confirm' ? 'подтверждено' : 'отклонено'}`);
+    } catch (error) {
+      message.error(`Ошибка при ${action === 'confirm' ? 'подтверждении' : 'отклонении'} бронирования`);
+    }
   };
 
   const handleThemeToggle = () => {
     setIsDarkTheme(!isDarkTheme);
   };
 
-  const handleAutoConfirmToggle = () => {
-    setAutoConfirm(!autoConfirm);
+  const handleAutoConfirmToggle = async () => {
+    try {
+      const response = await axios.post('http://localhost/api/bookings/autoconfirm', {
+        autoconfirm: !autoConfirm
+      }, {
+        withCredentials: true
+      });
+      setAutoConfirm(response.data.autoconfirm);
+      message.success('Статус автоподтверждения успешно обновлен');
+    } catch (error) {
+      message.error('Ошибка при обновлении статуса автоподтверждения');
+    }
   };
 
-  const handleEmailNotificationToggle = () => {
-    setEmailNotification(!emailNotification);
+  const handleEmailNotificationToggle = async () => {
+    try {
+      const response = await axios.post('http://localhost/api/email/subscription', {
+        is_subscribed_to_email: !emailNotification
+      }, {
+        withCredentials: true
+      });
+      setEmailNotification(response.data.is_subscribed_to_email);
+      message.success('Статус подписки на уведомления по email успешно обновлен');
+    } catch (error) {
+      message.error('Ошибка при обновлении статуса подписки на уведомления по email');
+    }
   };
 
   const showRegisterModal = () => {
@@ -100,17 +174,64 @@ function App() {
     setIsLoginModalVisible(false);
   };
 
-  const handleLogout = async () => {
+  const showMyBookingsModal = async () => {
     try {
-      await axios.post('http://localhost/api/auth/logout', {}, {
+      const response = await axios.get('http://localhost/api/bookings/my', {
         withCredentials: true
       });
-      message.success('Вы успешно вышли!');
-      setUser(null);
+      setMyBookings(response.data.result);
+      setIsMyBookingsModalVisible(true);
     } catch (error) {
-      message.error('Ошибка при выходе!');
+      message.error('Ошибка при загрузке ваших бронирований');
     }
   };
+
+  const handleMyBookingsModalCancel = () => {
+    setIsMyBookingsModalVisible(false);
+  };
+
+  const showAdminBookingsModal = async () => {
+    try {
+      const response = await axios.get('http://localhost/api/bookings/for_confirm', {
+        withCredentials: true
+      });
+      setAdminBookings(response.data.result);
+      setIsAdminBookingsModalVisible(true);
+    } catch (error) {
+      message.error('Ошибка при загрузке бронирований для подтверждения');
+    }
+  };
+
+  const handleAdminBookingsModalCancel = () => {
+    setIsAdminBookingsModalVisible(false);
+  };
+
+  const handleCancelBooking = async (bookingId) => {
+    try {
+      await axios.post(`http://localhost/api/bookings/${bookingId}/cancel_my`, {}, {
+        withCredentials: true
+      });
+      setMyBookings((prevBookings) => prevBookings.filter(booking => booking.booking_id !== bookingId));
+      message.success('Бронирование успешно отменено');
+    } catch (error) {
+      message.error('Ошибка при отмене бронирования');
+    }
+  };
+
+  useEffect(() => {
+    const fetchAutoConfirmStatus = async () => {
+      try {
+        const response = await axios.get('http://localhost/api/bookings/autoconfirm', {
+          withCredentials: true
+        });
+        setAutoConfirm(response.data.autoconfirm);
+      } catch (error) {
+        message.error('Ошибка при загрузке статуса автоподтверждения');
+      }
+    };
+
+    fetchAutoConfirmStatus();
+  }, [user]);
 
   const columns = [
     {
@@ -132,42 +253,21 @@ function App() {
       render: (text, record) => {
         const bookingKey = `${selectedHeadset}-${record.key}`;
         const isBooked = bookings[bookingKey];
+        const isBusy = busySlots.some(slot => {
+          const startHour = new Date(slot.start_time).getHours();
+          const endHour = new Date(slot.end_time).getHours();
+          return record.key >= startHour && record.key < endHour;
+        });
         return (
           <Button
             type="primary"
             danger={isBooked}
             onClick={() => handleBooking(selectedHeadset, record.key)}
+            disabled={isBusy}
           >
-            {isBooked ? "Отменить бронь" : "Забронировать"}
+            {isBusy ? 'Занято' : isBooked ? 'Отменить бронь' : 'Забронировать'}
           </Button>
         );
-      },
-    },
-    {
-      title: "Admin Action",
-      key: "adminAction",
-      align: 'center',
-      render: (text, record) => {
-        const bookingKey = `${selectedHeadset}-${record.key}`;
-        const isBooked = bookings[bookingKey];
-        return isBooked && user?.is_admin ? (
-          <>
-            <Button
-              type="primary"
-              style={{ marginRight: 8 }}
-              onClick={() => handleAdminAction('confirm', selectedHeadset, record.key)}
-            >
-              Подтвердить бронь
-            </Button>
-            <Button
-              type="default"
-              danger
-              onClick={() => handleAdminAction('delete', selectedHeadset, record.key)}
-            >
-              Удалить бронь
-            </Button>
-          </>
-        ) : null;
       },
     },
     {
@@ -189,21 +289,106 @@ function App() {
     bookingTime: null,
   }));
 
+  const myBookingsColumns = [
+    {
+      title: "Headset Name",
+      dataIndex: "headset_name",
+      key: "headset_name",
+    },
+    {
+      title: "Start Time",
+      dataIndex: "start_time",
+      key: "start_time",
+      render: (text) => <span>{new Date(text).toLocaleString()}</span>,
+    },
+    {
+      title: "End Time",
+      dataIndex: "end_time",
+      key: "end_time",
+      render: (text) => <span>{new Date(text).toLocaleString()}</span>,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (text, record) => (
+        <Button type="danger" onClick={() => handleCancelBooking(record.booking_id)}>
+          Отменить
+        </Button>
+      ),
+    },
+  ];
+
+  const adminBookingsColumns = [
+    {
+      title: "Headset Name",
+      dataIndex: "headset_name",
+      key: "headset_name",
+    },
+    {
+      title: "Start Time",
+      dataIndex: "start_time",
+      key: "start_time",
+      render: (text) => <span>{new Date(text).toLocaleString()}</span>,
+    },
+    {
+      title: "End Time",
+      dataIndex: "end_time",
+      key: "end_time",
+      render: (text) => <span>{new Date(text).toLocaleString()}</span>,
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (text, record) => (
+        <>
+          <Button
+            type="primary"
+            style={{ marginRight: 8 }}
+            onClick={() => handleAdminAction('confirm', record.booking_id)}
+          >
+            Подтвердить
+          </Button>
+          <Button
+            type="danger"
+            onClick={() => handleAdminAction('cancel', record.booking_id)}
+          >
+            Отклонить
+          </Button>
+        </>
+      ),
+    },
+  ];
+
   return (
     <div className={`app-container ${isDarkTheme ? 'dark' : 'light'}`}>
       <div className="top-right-buttons">
         {user ? (
           <>
-            <LogoutButton onLogout={handleLogout} />
+            <Button onClick={showMyBookingsModal}>Мои бронирования</Button>
+            {user.is_admin && (
+              <>
+                <Button onClick={showAdminBookingsModal}>Бронирования на подтверждение</Button>
+                <div style={{ marginBottom: "10px" }}>
+                  <Switch
+                    checked={autoConfirm}
+                    onChange={handleAutoConfirmToggle}
+                    style={{ marginRight: "10px" }}
+                  />
+                  Автоподтверждение бронирования: {autoConfirm ? "Включено" : "Выключено"}
+                </div>
+              </>
+            )}
+            <LogoutButton onLogout={() => setUser(null)} />
           </>
         ) : (
           <>
-            <Button onClick={showRegisterModal}>
-              Регистрация
-            </Button>
-            <Button onClick={showLoginModal}>
-              Вход
-            </Button>
+            <Button onClick={showRegisterModal}>Регистрация</Button>
+            <Button onClick={showLoginModal}>Вход</Button>
           </>
         )}
         <Button onClick={handleThemeToggle}>
@@ -216,9 +401,9 @@ function App() {
         footer={null}
         onCancel={handleRegisterModalCancel}
       >
-        <RegisterForm onRegisterSuccess={(user) => {
-          setUser(user);
+        <RegisterForm onRegisterSuccess={() => {
           setIsRegisterModalVisible(false);
+          message.success('Регистрация успешна. Теперь войдите в систему.');
         }} />
       </Modal>
       <Modal
@@ -232,32 +417,40 @@ function App() {
           setIsLoginModalVisible(false);
         }} />
       </Modal>
+      <Modal
+        title="Мои бронирования"
+        visible={isMyBookingsModalVisible}
+        footer={null}
+        onCancel={handleMyBookingsModalCancel}
+      >
+        {myBookings.length > 0 ? (
+          <Table columns={myBookingsColumns} dataSource={myBookings} />
+        ) : (
+          <p>У вас нет бронирований</p>
+        )}
+      </Modal>
+      <Modal
+        title="Бронирования на подтверждение"
+        visible={isAdminBookingsModalVisible}
+        footer={null}
+        onCancel={handleAdminBookingsModalCancel}
+      >
+        {adminBookings.length > 0 ? (
+          <Table columns={adminBookingsColumns} dataSource={adminBookings} />
+        ) : (
+          <p>Нет бронирований для подтверждения</p>
+        )}
+      </Modal>
       <h1>VR Headset Booking</h1>
       <div style={{ marginBottom: "20px" }}>
-        <div style={{ marginBottom: "10px" }}>
-          <Switch
-            checked={autoConfirm}
-            onChange={handleAutoConfirmToggle}
-            style={{ marginRight: "10px" }}
-          />
-          Автоподтверждение бронирования: {autoConfirm ? "Включено" : "Выключено"}
-        </div>
-        <div style={{ marginBottom: "10px" }}>
-          <Switch
-            checked={emailNotification}
-            onChange={handleEmailNotificationToggle}
-            style={{ marginRight: "10px" }}
-          />
-          Оповещать на email о освободившихся местах
-        </div>
         {vrHeadsets.map((headset) => (
           <Button
-            key={headset.id}
-            type={selectedHeadset === headset.id ? "primary" : "default"}
-            onClick={() => handleHeadsetClick(headset.id)}
+            key={headset.headset_id}
+            type={selectedHeadset === headset.headset_id ? "primary" : "default"}
+            onClick={() => handleHeadsetClick(headset.headset_id)}
             style={{ margin: "5px" }}
           >
-            {headset.name}
+            {headset.headset_name}
           </Button>
         ))}
       </div>

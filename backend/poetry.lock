@@ -611,6 +611,14 @@ python-versions = ">=3.8"
 dev = ["atomicwrites (==1.4.1)", "attrs (==23.2.0)", "coverage (==7.4.1)", "hatch", "invoke (==2.2.0)", "more-itertools (==10.2.0)", "pbr (==6.0.0)", "pluggy (==1.4.0)", "py (==1.11.0)", "pytest-cov (==4.1.0)", "pytest-timeout (==2.2.0)", "pytest (==8.0.0)", "pyyaml (==6.0.1)", "ruff (==0.2.1)"]
 
 [[package]]
+name = "pytz"
+version = "2024.1"
+description = "World timezone definitions, modern and historical"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "pyyaml"
 version = "6.0.1"
 description = "YAML parser and emitter for Python"
@@ -834,7 +842,7 @@ python-versions = ">=3.8"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "4b89ffbd6617d30f38764a00991e161eef9bad1d8ac1ee146891e0c2e329d2db"
+content-hash = "f01c5e632face1e5f1aaaa5684284f79f4d20bf30cd91ed469749afd8be56e32"
 
 [metadata.files]
 aiojobs = []
@@ -881,6 +889,7 @@ pyjwt = []
 python-dateutil = []
 python-dotenv = []
 python-multipart = []
+pytz = []
 pyyaml = []
 redis = []
 rich = []

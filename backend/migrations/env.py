@@ -9,6 +9,10 @@ from config.config import DB_HOST, DB_PORT, DB_USER, DB_NAME, DB_PASS
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 from src.models.users import metadata as users_metadata
+from src.models.headsets import metadata as headsets_metadata
+from src.models.bookings import metadata as bookings_metadata
+from src.models.settings import metadata as settings_metadata
+
 config = context.config
 
 section = config.config_ini_section
@@ -26,7 +30,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = [users_metadata]
+target_metadata = [users_metadata, headsets_metadata, bookings_metadata, settings_metadata]
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

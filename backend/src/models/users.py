@@ -13,5 +13,6 @@ user = Table(
     Column("email", String, nullable=False),
     Column("hashed_password", String, nullable=False),
     Column("is_active", Boolean, default=True, nullable=False),
-    Column("is_superuser", Boolean, default=False, nullable=False)
+    Column("is_superuser", Boolean, default=False, nullable=False),
+    Column("is_subscribed_to_email", Boolean, default=False, nullable=False)
 )

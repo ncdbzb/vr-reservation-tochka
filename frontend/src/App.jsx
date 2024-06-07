@@ -79,6 +79,11 @@ function App() {
     }
   };
 
+  const handleLogout = () => {
+    setUser(null);
+    window.location.reload(); // Перезагрузить страницу после выхода
+  };
+
   const handleBooking = async (headsetId, hour) => {
     const bookingKey = `${headsetId}-${hour}`;
     if (bookings[bookingKey]) {
@@ -94,13 +99,19 @@ function App() {
       endTime.setHours(hour + 1);
 
       try {
-        await axios.post('http://localhost/api/bookings/book', {
+        const response = await axios.post('http://localhost/api/bookings/book', {
           headset_id: headsetId,
           start_time: startTime.toISOString(),
           end_time: endTime.toISOString()
         }, {
           withCredentials: true
         });
+        const { status } = response.data;
+        if (status === "confirmed") {
+          message.success('Бронирование успешно создано');
+        } else if (status === "pending") {
+          message.info('Бронирование ожидает подтверждения');
+        }
         setBookings((prevBookings) => ({
           ...prevBookings,
           [bookingKey]: {
@@ -108,7 +119,6 @@ function App() {
             bookingTime: new Date().toLocaleString(),
           },
         }));
-        message.success('Бронирование успешно создано');
       } catch (error) {
         message.error('Ошибка при создании бронирования');
       }
@@ -401,7 +411,7 @@ function App() {
                 </div>
               </>
             )}
-            <LogoutButton onLogout={() => setUser(null)} />
+            <LogoutButton onLogout={handleLogout} />
           </>
         ) : (
           <>

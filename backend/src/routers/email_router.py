@@ -15,7 +15,7 @@ router = APIRouter()
     '/subscription',
     status_code=status.HTTP_204_NO_CONTENT
 )
-async def change_subscription(
+async def post_subscription(
     sub_data: ChangeSubscriptionSchema,
     current_user: UserSchema = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session)

@@ -8,6 +8,7 @@ from src.routers.users_router import router as users_router
 from src.routers.headsets_router import router as headset_router
 from src.routers.bookings_router import router as booking_router
 from src.routers.email_router import router as email_router
+from src.routers.admin_router import router as admin_router
 
 from config.config import CORS_ORIGINS
 from config.init_db import init_db
@@ -36,6 +37,10 @@ app.include_router(
 )
 app.include_router(
     headset_router,
+    prefix="/bookings"
+)
+app.include_router(
+    admin_router,
     prefix="/bookings"
 )
 app.include_router(

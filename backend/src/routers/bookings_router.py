@@ -3,12 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config.database import get_async_session
 from src.models.bookings import booking
 from src.models.settings import settings
-from src.models.headsets import headset
 from src.schemas.booking_schema import BookingTimeSchema, BookingCreateSchema, ResponseBookingSchema
 from src.schemas.user_schema import UserSchema
 from src.auth.utils.jwt_manager import get_current_user
 from src.utils.convert_time import convert_time
-from sqlalchemy import select, insert, and_, update
+from src.utils.booking_utils import get_headset_name, change_booking_status
+from sqlalchemy import select, insert, and_
 
 
 router = APIRouter()
@@ -34,14 +34,10 @@ async def get_my_bookings(
     if not bookings:
         return {'result': []}
 
-    async def get_headset_name(headset_id: int) -> str:
-        query = select(headset.c.name).where(headset.c.id == headset_id)
-        return (await session.execute(query)).fetchone()[0]
-
     result = [
         ResponseBookingSchema(
             booking_id=booking.id,
-            headset_name=await get_headset_name(booking.headset_id),
+            headset_name=await get_headset_name(booking.headset_id, session),
             start_time=booking.start_time,
             end_time=booking.end_time,
             status=booking.status
@@ -60,36 +56,7 @@ async def cancel_my(
     user: UserSchema = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session)
 ) -> None:
-    query = select(
-        booking
-    ).where(
-        and_(
-            booking.c.id == booking_id,
-            booking.c.user_id == user.id
-        )    
-    )
-    my_booking = (await session.execute(query)).fetchone()
-
-    if not my_booking:
-        raise HTTPException(status_code=400, detail='Booking not found')
-    if my_booking.status == 'cancelled':
-        raise HTTPException(status_code=400, detail='Booking is already cancelled')
-    
-    stmt = update(
-        booking
-    ).where(
-        and_(
-            booking.c.id == booking_id,
-            booking.c.user_id == user.id
-        )    
-    ).values(
-        status='cancelled'
-    )
-
-    await session.execute(stmt)
-    await session.commit()
-
-    return
+    return await change_booking_status(booking_id, session, user, 'cancelled')
 
 
 @router.get(
@@ -143,7 +110,7 @@ async def book(
     )
 
     if (await session.execute(query)).fetchone():
-        raise HTTPException(status_code=400, detail='This time slot is already booked')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This time slot is already booked')
 
     auto_confirm = (await session.execute(select(settings.c.auto_confirm))).fetchone()[0]
 
@@ -165,6 +132,6 @@ async def book(
         await session.commit()
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e)
 
     return {'status': booking_status}

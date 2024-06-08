@@ -19,7 +19,8 @@ class ResponseBookingSchema(BaseModel):
     headset_name: str
     start_time: datetime
     end_time: datetime
-    status: str
+    status: str | None
 
     class Config:
         from_attributes = True
+

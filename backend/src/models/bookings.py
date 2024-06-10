@@ -11,6 +11,7 @@ booking = Table(
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("user_id", UUID(as_uuid=True), ForeignKey(user.c.id), nullable=False),
     Column("headset_id", Integer, ForeignKey(headset.c.id), nullable=False),
+    Column("cost", Integer, nullable=False),
     Column("start_time", TIMESTAMP, nullable=False),
     Column("end_time", TIMESTAMP, nullable=False),
     Column("status", String, nullable=False)

@@ -17,6 +17,7 @@ class BookingCreateSchema(BaseModel):
 class ResponseBookingSchema(BaseModel):
     booking_id: int
     headset_name: str
+    cost: int
     start_time: datetime
     end_time: datetime
     status: str | None

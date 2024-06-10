@@ -11,6 +11,11 @@ async def get_headset_name(headset_id: int, session: AsyncSession) -> str:
         return (await session.execute(query)).fetchone()[0]
 
 
+async def get_cost(headset_id: int, session: AsyncSession) -> int:
+        query = select(headset.c.cost).where(headset.c.id == headset_id)
+        return (await session.execute(query)).fetchone()[0]
+
+
 async def change_booking_status(booking_id: int, session: AsyncSession, user: UserSchema, booking_status: str) -> None:
     query = select(
         booking

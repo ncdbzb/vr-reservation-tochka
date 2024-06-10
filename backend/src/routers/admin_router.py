@@ -90,12 +90,13 @@ async def get_bookings_for_confirm(
 
     result = [
         ResponseBookingSchema(
-            booking_id=booking.id,
-            headset_name=await get_headset_name(booking.headset_id, session),
-            start_time=booking.start_time,
-            end_time=booking.end_time,
-            status=booking.status
-        ) for booking in bookings
+            booking_id=current_booking.id,
+            headset_name=await get_headset_name(current_booking.headset_id, session),
+            cost=current_booking.cost,
+            start_time=current_booking.start_time,
+            end_time=current_booking.end_time,
+            status=current_booking.status
+        ) for current_booking in bookings
     ]
     
     return {"result": result}

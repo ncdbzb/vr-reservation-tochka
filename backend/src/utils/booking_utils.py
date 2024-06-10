@@ -20,7 +20,7 @@ async def change_booking_status(booking_id: int, session: AsyncSession, user: Us
     my_booking = (await session.execute(query)).fetchone()
 
     if not my_booking:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Booking not found')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Booking not found')
     if not user.is_superuser and my_booking.user_id != user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
     if my_booking.status == booking_status:

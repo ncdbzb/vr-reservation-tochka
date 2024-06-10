@@ -23,12 +23,12 @@ async def post_subscription(
     is_subscribed_to_email = sub_data.is_subscribed_to_email
 
     if current_user.is_subscribed_to_email == is_subscribed_to_email:
-        raise HTTPException(status_code=400, detail=f'Subscription is already {is_subscribed_to_email}')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'Subscription is already {is_subscribed_to_email}')
     
     stmt = update(
         user
     ).where(
-          user.c.id == current_user.id
+        user.c.id == current_user.id
     ).values(
         is_subscribed_to_email=is_subscribed_to_email
     )

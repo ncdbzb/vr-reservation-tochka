@@ -35,5 +35,5 @@ async def login(
     "/logout",
     status_code=status.HTTP_204_NO_CONTENT
 )
-async def login():
+async def logout():
     return await logout_user()

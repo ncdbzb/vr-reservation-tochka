@@ -90,7 +90,8 @@ async def get_bookings(
 
 @router.post(
     '/book',
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    response_model=dict
 )
 async def book(
     booking_request: BookingCreateSchema,

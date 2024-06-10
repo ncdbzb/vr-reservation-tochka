@@ -19,7 +19,7 @@ async def get_headsets(
 ) -> dict:
     headsets = (await session.execute(select(headset))).fetchall()
     if not headsets:
-        raise HTTPException(status_code=404, detail="No headsets found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No headsets found")
     
     result = [HeadsetSchema.from_orm(headset) for headset in headsets]
     return {"result": result}

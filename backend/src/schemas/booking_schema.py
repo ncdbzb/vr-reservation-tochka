@@ -23,4 +23,3 @@ class ResponseBookingSchema(BaseModel):
 
     class Config:
         from_attributes = True
-

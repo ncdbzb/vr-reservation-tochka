@@ -29,27 +29,33 @@ app.add_middleware(
 
 app.include_router(
     auth_router,
-    prefix="/auth"
+    prefix="/auth",
+    tags=["Auth"]
 )
 app.include_router(
     users_router,
-    prefix="/users"
+    prefix="/users",
+    tags=["Users"]
 )
 app.include_router(
     headset_router,
-    prefix="/bookings"
+    prefix="/bookings",
+    tags=["Bookings"]
 )
 app.include_router(
     admin_router,
-    prefix="/bookings"
+    prefix="/bookings",
+    tags=["Admin"]
 )
 app.include_router(
     booking_router,
-    prefix="/bookings"
+    prefix="/bookings",
+    tags=["Bookings"]
 )
 app.include_router(
     email_router,
-    prefix="/email"
+    prefix="/email",
+    tags=["Email"]
 )
 
 # @app.get("/send_mail")

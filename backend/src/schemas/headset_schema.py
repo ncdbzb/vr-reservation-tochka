@@ -8,3 +8,7 @@ class HeadsetSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ChangeCostSchema(BaseModel):
+    headset_id: int
+    new_cost: int

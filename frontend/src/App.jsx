@@ -27,6 +27,43 @@ function App() {
   const [newCost, setNewCost] = useState("");
 
   useEffect(() => {
+    const fetchAutoConfirmStatus = async () => {
+      try {
+        // Проверяем, является ли пользователь администратором
+        if (user && user.is_superuser) {
+          const response = await axios.get('http://localhost/api/bookings/autoconfirm', {
+            withCredentials: true
+          });
+          setAutoConfirm(response.data.autoconfirm);
+        }
+      } catch (error) {
+        message.error('Ошибка при загрузке статуса автоподтверждения');
+      }
+    };
+  
+    fetchAutoConfirmStatus();
+  }, [user]);
+
+  useEffect(() => {
+    //получение статуса подписки на уведомление
+    const fetchEmailNotificationStatus = async () => {
+      try {
+        // Проверяем, авторизован ли пользователь
+        if (user) {
+          const response = await axios.get('http://localhost/api/users/me', {
+            withCredentials: true
+          });
+          setEmailNotification(response.data.is_subscribed_to_email);
+        }
+      } catch (error) {
+        message.error('Ошибка при загрузке статуса подписки на уведомления по email');
+      }
+    };
+  
+    fetchEmailNotificationStatus();
+  }, [user]);  
+
+  useEffect(() => {
     const fetchUser = async () => {
       try {
         const response = await axios.get('http://localhost/api/users/me', {
@@ -50,17 +87,20 @@ function App() {
   useEffect(() => {
     const fetchHeadsets = async () => {
       try {
-        const response = await axios.get('http://localhost/api/bookings/headsets', {
-          withCredentials: true
-        });
-        setVrHeadsets(response.data.result);
+        // Проверяем, авторизован ли пользователь
+   
+          const response = await axios.get('http://localhost/api/bookings/headsets', {
+            withCredentials: true
+          });
+          setVrHeadsets(response.data.result);
+        
       } catch (error) {
         message.error('Ошибка загрузки списка VR шлемов');
       }
     };
-
+  
     fetchHeadsets();
-  }, []);
+  }, [user]);  
 
   const handleHeadsetClick = async (id) => {
     setSelectedHeadset(selectedHeadset === id ? null : id);
@@ -117,6 +157,7 @@ function App() {
           [bookingKey]: {
             price: "1000 руб.", // Пример цены
             bookingTime: new Date().toLocaleString(),
+            isBooked: true // Добавляем флаг isBooked
           },
         }));
       } catch (error) {
@@ -143,31 +184,43 @@ function App() {
 
   const handleAutoConfirmToggle = async () => {
     try {
+      // Определяем новое значение
+      const newAutoConfirm = !autoConfirm;
+  
+      // Отправляем запрос на сервер с новым значением
       const response = await axios.post('http://localhost/api/bookings/autoconfirm', {
-        autoconfirm: !autoConfirm
+        autoconfirm: newAutoConfirm
       }, {
         withCredentials: true
       });
-      setAutoConfirm(response.data.autoconfirm);
+  
+      // Обновляем состояние после успешного запроса
+      setAutoConfirm(newAutoConfirm);
+  
+      // Показываем сообщение об успешном обновлении
       message.success('Статус автоподтверждения успешно обновлен');
     } catch (error) {
+      // Обрабатываем ошибку
       message.error('Ошибка при обновлении статуса автоподтверждения');
     }
   };
+  
 
   const handleEmailNotificationToggle = async () => {
     try {
-      const response = await axios.post('http://localhost/api/email/subscription', {
-        is_subscribed_to_email: !emailNotification
-      }, {
-        withCredentials: true
-      });
-      setEmailNotification(response.data.is_subscribed_to_email);
-      message.success('Статус подписки на уведомления по email успешно обновлен');
+       // Проверяем наличие активного пользователя
+        const newEmailNotification = !emailNotification; // Получаем новое значение
+        const response = await axios.post('http://localhost/api/email/subscription', {
+          is_subscribed_to_email: newEmailNotification // Отправляем новое значение
+        }, {
+          withCredentials: true
+        });
+        setEmailNotification(newEmailNotification); // Обновляем состояние только после успешного запроса
+        message.success('Статус подписки на уведомления по email успешно обновлен');
     } catch (error) {
       message.error('Ошибка при обновлении статуса подписки на уведомления по email');
     }
-  };
+  };  
 
   const showRegisterModal = () => {
     setIsRegisterModalVisible(true);
@@ -185,7 +238,7 @@ function App() {
     setIsLoginModalVisible(false);
   };
 
-  const handleChangeCost = async () => {
+  /*const handleChangeCost = async () => {
     try {
       await axios.post(
         "http://localhost/api/bookings/change_cost",
@@ -197,7 +250,7 @@ function App() {
     } catch (error) {
       message.error("Ошибка при изменении стоимости");
     }
-  };
+  };*/
 
   const showMyBookingsModal = async () => {
     try {
@@ -242,24 +295,6 @@ function App() {
       message.error('Ошибка при отмене бронирования');
     }
   };
-
-  useEffect(() => {
-    const fetchAutoConfirmStatus = async () => {
-      try {
-        // Проверяем, является ли пользователь администратором
-        if (user && user.is_admin) {
-          const response = await axios.get('http://localhost/api/bookings/autoconfirm', {
-            withCredentials: true
-          });
-          setAutoConfirm(response.data.autoconfirm);
-        }
-      } catch (error) {
-        message.error('Ошибка при загрузке статуса автоподтверждения');
-      }
-    };
-  
-    fetchAutoConfirmStatus();
-  }, [user]);
   
   const columns = [
     {
@@ -289,11 +324,11 @@ function App() {
         return (
           <Button
             type="primary"
-            danger={isBooked}
+            danger={isBooked} // Когда слот занят, кнопка будет опасной (danger)
             onClick={() => handleBooking(selectedHeadset, record.key)}
-            disabled={isBusy}
+            disabled={isBusy || isBooked} // Кнопка отключается, если слот занят или занят другим бронированием
           >
-            {isBusy ? 'Занято' : isBooked ? 'Отменить бронь' : 'Забронировать'}
+            {isBusy ? 'Занято' : isBooked ? 'Занято' : 'Забронировать'} {/* Текст кнопки изменяется на "Занято", если слот занят */}
           </Button>
         );
       },
@@ -312,7 +347,7 @@ function App() {
 
   const data = hours.map(hour => ({
     key: hour,
-    time: `${hour}:00`,
+    time: `${hour}:00 - ${hour + 1}:00`, // Формат временного промежутка
     price: "1000 руб.", // Пример цены
     bookingTime: null,
   }));
@@ -397,8 +432,10 @@ function App() {
       <div className="top-right-buttons">
         {user ? (
           <>
-            <Button onClick={showMyBookingsModal}>Мои бронирования</Button>
-            {user && user.is_admin && (
+            {user && !user.is_superuser && (
+              <Button onClick={showMyBookingsModal}>Мои бронирования</Button>
+            )}
+            {user && user.is_superuser && (
               <>
                 <Button onClick={showAdminBookingsModal}>Бронирования на подтверждение</Button>
                 <div style={{ marginBottom: "10px" }}>
@@ -422,6 +459,16 @@ function App() {
         <Button onClick={handleThemeToggle}>
           {isDarkTheme ? "Светлая тема" : "Темная тема"}
         </Button>
+        {!user || !user.is_superuser && (
+          <div style={{ marginBottom: "10px" }}>
+            <Switch
+              checked={emailNotification}
+              onChange={handleEmailNotificationToggle}
+              style={{ marginRight: "10px" }}
+            />
+            Подписка на email уведомления: {emailNotification ? "Включено" : "Выключено"}
+          </div>
+        )}
       </div>
       <Modal
         title="Регистрация"
@@ -484,19 +531,6 @@ function App() {
       </div>
       {selectedHeadset !== null && (
         <>
-          {user && user.is_admin && (
-            <div style={{ marginBottom: "20px" }}>
-              <Input
-                value={newCost}
-                onChange={(e) => setNewCost(e.target.value)}
-                placeholder="Новая стоимость"
-                style={{ marginBottom: "10px", width: "200px" }}
-              />
-              <Button type="primary" onClick={handleChangeCost}>
-                Изменить стоимость
-              </Button>
-            </div>
-          )}
           <Table
             columns={columns}
             dataSource={data}

@@ -30,7 +30,7 @@ async def get_autoconfirm(
     
     auto_confirm = auto_confirm[0]
 
-    return {'autoconfrim': auto_confirm}
+    return {'autoconfirm': auto_confirm}
 
 
 @router.post(

@@ -89,27 +89,60 @@ function App() {
   useEffect(() => {
     const fetchHeadsets = async () => {
       try {
-        // Проверяем, авторизован ли пользователь
-   
-          const response = await axios.get('http://localhost/api/bookings/headsets', {
-            withCredentials: true
-          });
-          setVrHeadsets(response.data.result);
-        
+        const response = await axios.get('http://localhost/api/bookings/headsets', {
+          withCredentials: true
+        });
+        setVrHeadsets(response.data.result);
+        // Извлечение и сохранение цен
+        const headsetCosts = {};
+        response.data.result.forEach(headset => {
+          headsetCosts[headset.headset_id] = headset.cost;
+        });
+        setCosts(headsetCosts);
       } catch (error) {
         message.error('Ошибка загрузки списка VR шлемов');
       }
     };
   
     fetchHeadsets();
-  }, [user]);  
-
+  }, []);
+  
+  const handleChangeCost = async () => {
+    try {
+      // Проверяем выбранный headset
+      if (selectedHeadset !== null) {
+        // Отправляем запрос на изменение стоимости
+        await axios.post('http://localhost/api/bookings/change_cost', {
+          headset_id: selectedHeadset,
+          new_cost: newCost
+        }, {
+          withCredentials: true
+        });
+        // Обновляем состояние цены для выбранного headset
+        setCosts(prevCosts => ({
+          ...prevCosts,
+          [selectedHeadset]: newCost
+        }));
+        // Очищаем состояние новой стоимости
+        setNewCost("");
+        // Показываем сообщение об успешном изменении стоимости
+        message.success('Стомость успешно изменена');
+      } else {
+        // Показываем сообщение об ошибке выбора headset
+        message.error('Выберите headset для изменения стоимости');
+      }
+    } catch (error) {
+      // Обрабатываем ошибку при изменении стоимости
+      message.error('Ошибка при изменении стоимости');
+    }
+  };
+  
   const handleHeadsetClick = async (id) => {
     setSelectedHeadset(selectedHeadset === id ? null : id);
 
     if (selectedHeadset !== id) {
       try {
-        const response = await axios.get(`http://localhost/api/bookings/${id}`, {
+        const response = await axios.get(`http://localhost/api/bookings/${id}/unavailable`, {
           withCredentials: true
         });
         setBusySlots(response.data.result);
@@ -118,32 +151,6 @@ function App() {
       }
     } else {
       setBusySlots([]);
-    }
-  };
-
-  const handleCostChange = (headsetId, hour, newCost) => {
-    const bookingKey = `${headsetId}-${hour}`;
-    setCosts((prevCosts) => ({
-      ...prevCosts,
-      [bookingKey]: newCost,
-    }));
-  };
-  
-  const handleSubmitCostChange = async (headsetId, hour) => {
-    const bookingKey = `${headsetId}-${hour}`;
-    const cost = costs[bookingKey];
-  
-    try {
-      await axios.post('http://localhost/api/bookings/change_cost', {
-        headset_id: headsetId,
-        new_cost: cost,
-      }, {
-        withCredentials: true,
-      });
-  
-      message.success('Стоимость успешно изменена');
-    } catch (error) {
-      message.error('Ошибка при изменении стоимости');
     }
   };  
 
@@ -266,32 +273,18 @@ function App() {
     setIsLoginModalVisible(false);
   };
 
-  /*const handleChangeCost = async () => {
-    try {
-      await axios.post(
-        "http://localhost/api/bookings/change_cost",
-        { headset_id: selectedHeadset, new_cost: newCost },
-        { withCredentials: true }
-      );
-      message.success("Стоимость успешно изменена");
-      // Можно добавить обновление данных после изменения стоимости
-    } catch (error) {
-      message.error("Ошибка при изменении стоимости");
-    }
-  };*/
-
   const showMyBookingsModal = async () => {
     try {
       const response = await axios.get('http://localhost/api/bookings/my', {
         withCredentials: true
       });
-      setMyBookings(response.data.result);
+      setMyBookings(response.data.result); // Устанавливаем бронирования в состояние
       setIsMyBookingsModalVisible(true);
     } catch (error) {
       message.error('Ошибка при загрузке ваших бронирований');
     }
   };
-
+  
   const handleMyBookingsModalCancel = () => {
     setIsMyBookingsModalVisible(false);
   };
@@ -381,42 +374,17 @@ function App() {
       },
     },
   ];
-  
-  if (user && user.is_superuser) {
-    columns.push({
-      title: "Change Price",
-      key: "changePrice",
-      align: 'center',
-      render: (text, record) => {
-        const bookingKey = `${selectedHeadset}-${record.key}`;
-        return (
-          <div>
-            <input
-              type="text"
-              value={costs[bookingKey] || ""}
-              onChange={(e) => handleCostChange(selectedHeadset, record.key, e.target.value)}
-            />
-            <Button
-              onClick={() => handleSubmitCostChange(selectedHeadset, record.key)}
-              style={{ marginLeft: 8 }}
-            >
-              Изменить цену
-            </Button>
-          </div>
-        );
-      },
-    });
-  }
 
   const data = hours.map(hour => {
     const bookingKey = `${selectedHeadset}-${hour}`;
     return {
       key: hour,
       time: `${hour}:00 - ${hour + 1}:00`, // Формат временного промежутка
-      price: costs[bookingKey] || "1000 руб.", // Пример цены, заменяется на актуальную цену из состояния
+      price: `${costs[selectedHeadset] || "1000"} руб.`, // Добавляем единицу измерения к цене
       bookingTime: null,
     };
   });
+  
   
   const myBookingsColumns = [
     {
@@ -435,6 +403,12 @@ function App() {
       dataIndex: "end_time",
       key: "end_time",
       render: (text) => <span>{new Date(text).toLocaleString()}</span>,
+    },
+    {
+      title: "Cost",
+      dataIndex: "cost",
+      key: "cost",
+      render: (text) => <span>{text} руб.</span>, // Отображаем стоимость с единицей измерения
     },
     {
       title: "Status",
@@ -471,6 +445,12 @@ function App() {
       render: (text) => <span>{new Date(text).toLocaleString()}</span>,
     },
     {
+      title: "Cost",
+      dataIndex: "cost",
+      key: "cost",
+      render: (text) => <span>{text} руб.</span>, // Добавляем " руб." к стоимости
+    },
+    {
       title: "Action",
       key: "action",
       render: (text, record) => (
@@ -492,7 +472,7 @@ function App() {
       ),
     },
   ];
-
+  
   return (
     <div className={`app-container ${isDarkTheme ? 'dark' : 'light'}`}>
       <div className="top-right-buttons">
@@ -597,6 +577,28 @@ function App() {
       </div>
       {selectedHeadset !== null && (
         <>
+          {user && user.is_superuser && (
+            <div className="change-cost">
+              <input
+                type="text"
+                pattern="[0-9]*"
+                value={newCost}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    setNewCost(value);
+                  }
+                }}
+                placeholder="Новая стоимость"
+              />
+              <Button
+                onClick={handleChangeCost}
+                disabled={!newCost || selectedHeadset === null}
+              >
+                Изменить стоимость
+              </Button>
+            </div>
+          )}
           <Table
             columns={columns}
             dataSource={data}

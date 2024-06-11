@@ -1,6 +1,6 @@
 import uvicorn
 import asyncio
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 # from fastapi_jsonrpc import API, JsonRpcRouter
 from src.auth.auth_router import router as auth_router
@@ -58,14 +58,6 @@ app.include_router(
     tags=["Email"]
 )
 
-# @app.get("/send_mail")
-# async def send_mail():
-#     result = send_email_task.delay('kostya.pershin.18@mail.ru')
-#     result = result.get()
-#     if result == 'success':
-#         return {'status': 'success'}
-#     else:
-#         raise HTTPException(status_code=500, detail='error')
 
 async def main():
     await init_db()

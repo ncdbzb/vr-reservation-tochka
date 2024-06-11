@@ -7,7 +7,7 @@ from src.schemas.booking_schema import BookingTimeSchema, BookingCreateSchema, R
 from src.schemas.user_schema import UserSchema
 from src.auth.utils.jwt_manager import get_current_user
 from src.utils.convert_time import convert_time
-from src.utils.booking_utils import get_headset_name, change_booking_status, get_cost
+from src.utils.booking_utils import get_headset_name, change_booking_status, get_cost, send_email
 from sqlalchemy import select, insert, and_
 
 
@@ -120,12 +120,13 @@ async def book(
 
     start_time = convert_time(booking_request.start_time)
     end_time = convert_time(booking_request.end_time)
+    cost = await get_cost(booking_request.headset_id, session)
 
     try:
         stmt = insert(booking).values(
             user_id=user.id,
             headset_id=booking_request.headset_id,
-            cost=await get_cost(booking_request.headset_id, session),
+            cost=cost,
             start_time=start_time,
             end_time=end_time,
             status=booking_status
@@ -136,5 +137,13 @@ async def book(
 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e)
+    
+    await send_email(
+        booking_status,
+        'kostya.pershin.18@mail.ru',
+        await get_headset_name(booking_request.headset_id, session),
+        start_time,
+        end_time,
+        cost)
 
     return {'status': booking_status}

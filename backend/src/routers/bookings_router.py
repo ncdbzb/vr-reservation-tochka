@@ -9,6 +9,7 @@ from src.auth.utils.jwt_manager import get_current_user
 from src.utils.convert_time import convert_time
 from src.utils.booking_utils import get_headset_name, change_booking_status, get_cost, send_email
 from sqlalchemy import select, insert, and_
+from datetime import datetime, date
 
 
 router = APIRouter()
@@ -66,25 +67,30 @@ async def cancel_my(
     response_model=dict
 )
 async def get_bookings(
-    headset_id: int, 
+    headset_id: int,
+    date: date,
     session: AsyncSession = Depends(get_async_session)
 ) -> dict:
-    
+    start_of_day = datetime.combine(date, datetime.min.time())
+    end_of_day = datetime.combine(date, datetime.max.time())
+
     query = select(
-        booking.c.start_time, 
+        booking.c.start_time,
         booking.c.end_time
     ).where(
         and_(
             booking.c.headset_id == headset_id,
-            booking.c.status.in_(['confirmed', 'pending'])
-        )    
+            booking.c.status.in_(['confirmed', 'pending']),
+            booking.c.start_time >= start_of_day,
+            booking.c.end_time <= end_of_day
+        )
     )
-    
+
     bookings = (await session.execute(query)).fetchall()
-    
+
     if not bookings:
         return {"result": []}
-    
+
     result = [BookingTimeSchema.from_orm(booking) for booking in bookings]
     return {"result": result}
 

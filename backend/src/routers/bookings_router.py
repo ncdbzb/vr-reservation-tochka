@@ -135,6 +135,7 @@ async def book(
             cost=cost,
             start_time=start_time,
             end_time=end_time,
+            created_at=convert_time(datetime.now()),
             status=booking_status
         )
         

@@ -14,5 +14,6 @@ booking = Table(
     Column("cost", Integer, nullable=False),
     Column("start_time", TIMESTAMP, nullable=False),
     Column("end_time", TIMESTAMP, nullable=False),
+    Column("created_at", TIMESTAMP, nullable=False),
     Column("status", String, nullable=False)
 )

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Table, Switch, Modal, message } from "antd";
+import { Button, Table, Switch, Modal, message, DatePicker } from "antd";
 import axios from "axios";
 import "antd/dist/reset.css"; // Импорт стилей Ant Design
 import "./App.css"; // Импорт пользовательских стилей
@@ -10,6 +10,7 @@ import LogoutButton from './LogoutButton';
 const hours = Array.from({ length: 24 }, (_, i) => i); // [0, 1, 2, ..., 23]
 
 function App() {
+  const [selectedDate, setSelectedDate] = useState(null);
   const [selectedHeadset, setSelectedHeadset] = useState(null);
   const [bookings, setBookings] = useState({});
   const [isDarkTheme, setIsDarkTheme] = useState(false);
@@ -27,6 +28,24 @@ function App() {
   const [costs, setCosts] = useState({});
   const [newCost, setNewCost] = useState("");
 
+  useEffect(() => {
+    if (selectedHeadset !== null && selectedDate !== null) {
+      const fetchBusySlots = async () => {
+        try {
+          const formattedDate = selectedDate.format('YYYY-MM-DD'); // Форматирование даты
+          const response = await axios.get(`http://localhost/api/bookings/${selectedHeadset}/unavailable?date=${formattedDate}`, {
+            withCredentials: true
+          });
+          setBusySlots(response.data.result);
+        } catch (error) {
+          message.error('Ошибка загрузки занятых окон');
+        }
+      };
+      fetchBusySlots();
+    } else {
+      setBusySlots([]);
+    }
+  }, [selectedHeadset, selectedDate]);  
 
   useEffect(() => {
     const fetchAutoConfirmStatus = async () => {
@@ -139,10 +158,11 @@ function App() {
   
   const handleHeadsetClick = async (id) => {
     setSelectedHeadset(selectedHeadset === id ? null : id);
-
-    if (selectedHeadset !== id) {
+  
+    if (selectedHeadset !== id && selectedDate !== null) {
       try {
-        const response = await axios.get(`http://localhost/api/bookings/${id}/unavailable`, {
+        const formattedDate = selectedDate.format('YYYY-MM-DD'); // Форматирование даты
+        const response = await axios.get(`http://localhost/api/bookings/${id}/unavailable?date=${formattedDate}`, {
           withCredentials: true
         });
         setBusySlots(response.data.result);
@@ -153,14 +173,19 @@ function App() {
       setBusySlots([]);
     }
   };  
-
+  
   const handleLogout = () => {
     setUser(null);
     window.location.reload(); // Перезагрузить страницу после выхода
   };
 
   const handleBooking = async (headsetId, hour) => {
-    const bookingKey = `${headsetId}-${hour}`;
+    if (!selectedDate) {
+      message.error('Пожалуйста, выберите дату бронирования');
+      return;
+    }
+  
+    const bookingKey = `${headsetId}-${selectedDate.format('YYYY-MM-DD')}-${hour}`;
     if (bookings[bookingKey]) {
       setBookings((prevBookings) => {
         const newBookings = { ...prevBookings };
@@ -168,11 +193,11 @@ function App() {
         return newBookings;
       });
     } else {
-      const startTime = new Date();
+      const startTime = new Date(selectedDate);
       startTime.setHours(hour, 0, 0);
       const endTime = new Date(startTime);
       endTime.setHours(hour + 1);
-
+  
       try {
         const response = await axios.post('http://localhost/api/bookings/book', {
           headset_id: headsetId,
@@ -199,7 +224,7 @@ function App() {
         message.error('Ошибка при создании бронирования');
       }
     }
-  };
+  };    
 
   const handleAdminAction = async (action, bookingId) => {
     try {
@@ -330,7 +355,7 @@ function App() {
       key: "price",
       align: 'center',
       render: (text, record) => {
-        const bookingKey = `${selectedHeadset}-${record.key}`;
+        const bookingKey = `${selectedHeadset}-${selectedDate?.format('YYYY-MM-DD')}-${record.key}`;
         return costs[bookingKey] || text;
       }
     },
@@ -339,7 +364,7 @@ function App() {
       key: "action",
       align: 'center',
       render: (text, record) => {
-        const bookingKey = `${selectedHeadset}-${record.key}`;
+        const bookingKey = `${selectedHeadset}-${selectedDate?.format('YYYY-MM-DD')}-${record.key}`;
         const isBooked = bookings[bookingKey];
         const isBusy = busySlots.some(slot => {
           const startHour = new Date(slot.start_time).getHours();
@@ -369,11 +394,11 @@ function App() {
       key: "bookingTime",
       align: 'center',
       render: (text, record) => {
-        const bookingKey = `${selectedHeadset}-${record.key}`;
+        const bookingKey = `${selectedHeadset}-${selectedDate?.format('YYYY-MM-DD')}-${record.key}`;
         return bookings[bookingKey]?.bookingTime || "-";
       },
     },
-  ];
+  ];  
 
   const data = hours.map(hour => {
     const bookingKey = `${selectedHeadset}-${hour}`;
@@ -512,7 +537,7 @@ function App() {
               onChange={handleEmailNotificationToggle}
               style={{ marginRight: "10px" }}
             />
-            Подписка на email уведомления: {emailNotification ? "Включено" : "Выключено"}
+            Подписка на email рассылку: {emailNotification ? "Включено" : "Выключено"}
           </div>
         )}
       </div>
@@ -576,39 +601,45 @@ function App() {
         ))}
       </div>
       {selectedHeadset !== null && (
-        <>
-          {user && user.is_superuser && (
-            <div className="change-cost">
-              <input
-                type="text"
-                pattern="[0-9]*"
-                value={newCost}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^\d*$/.test(value)) {
-                    setNewCost(value);
-                  }
-                }}
-                placeholder="Новая стоимость"
-              />
-              <Button
-                onClick={handleChangeCost}
-                disabled={!newCost || selectedHeadset === null}
-              >
-                Изменить стоимость
-              </Button>
-            </div>
-          )}
-          <Table
-            columns={columns}
-            dataSource={data}
-            pagination={false}
-            bordered
-            size="small"
-            rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
+      <>
+        <div style={{ marginBottom: '20px' }}>
+          <DatePicker
+            value={selectedDate}
+            onChange={(date) => setSelectedDate(date)}
           />
-        </>
-      )}
+        </div>
+        {user && user.is_superuser && (
+          <div className="change-cost">
+            <input
+              type="text"
+              pattern="[0-9]*"
+              value={newCost}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d*$/.test(value)) {
+                  setNewCost(value);
+                }
+              }}
+              placeholder="Новая стоимость"
+            />
+            <Button
+              onClick={handleChangeCost}
+              disabled={!newCost || selectedHeadset === null}
+            >
+              Изменить стоимость
+            </Button>
+          </div>
+        )}
+        <Table
+          columns={columns}
+          dataSource={data}
+          pagination={false}
+          bordered
+          size="small"
+          rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
+        />
+      </>
+    )}
     </div>
   );
 }

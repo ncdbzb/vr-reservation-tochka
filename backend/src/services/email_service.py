@@ -66,11 +66,12 @@ class EmailService:
         cls.send_email(user_email, subject, body)
 
     @classmethod
-    def send_notice_email(cls, user_email: str):
-        subject = 'Цены снизились!'
+    def send_notice_email(cls, user_email: str, headset_name: str, old_cost: int, new_cost: int):
+        subject = 'Снижение цен на бронирования'
         body = ('<div>'
-                '<h1>Здравствуйте!</h1>'
-                '<p>Мы получили Вашу заявку! В ближайшее время администратор её проверит, и Вы получите ответ.</p>'
+                f'<h1>Здравствуйте, цена на {headset_name} бронирование снизилась!</h1>'
+                f'<p>Старая цена: <s>{old_cost}</s><br>'
+                f'Новая цена: <b>{new_cost}</b></p>'
                 '</div>')
 
         cls.send_email(user_email, subject, body)

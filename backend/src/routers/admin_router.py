@@ -4,12 +4,13 @@ from config.database import get_async_session
 from src.models.settings import settings
 from src.models.bookings import booking
 from src.models.headsets import headset
+from src.models.users import user
 from src.schemas.user_schema import UserSchema
 from src.schemas.settings_schema import ChangeAutoconfirmSchema
 from src.schemas.booking_schema import ResponseBookingSchema
 from src.schemas.headset_schema import ChangeCostSchema
 from src.auth.utils.jwt_manager import get_current_superuser
-from src.utils.booking_utils import get_headset_name, change_booking_status
+from src.utils.booking_utils import get_headset_name, change_booking_status, send_email
 from sqlalchemy import select, update
 
 
@@ -22,7 +23,7 @@ router = APIRouter()
     response_model=dict
 )
 async def get_autoconfirm(
-    user: UserSchema = Depends(get_current_superuser),
+    current_user: UserSchema = Depends(get_current_superuser),
     session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     query = select(settings.c.auto_confirm)
@@ -42,7 +43,7 @@ async def get_autoconfirm(
 )
 async def post_autoconfirm(
     autoconfirm_data: ChangeAutoconfirmSchema,
-    user: UserSchema = Depends(get_current_superuser),
+    current_user: UserSchema = Depends(get_current_superuser),
     session: AsyncSession = Depends(get_async_session)
 ) -> None:
     query = select(settings.c.auto_confirm)
@@ -74,7 +75,7 @@ async def post_autoconfirm(
     response_model=dict
 )
 async def get_bookings_for_confirm(
-    user: UserSchema = Depends(get_current_superuser),
+    current_user: UserSchema = Depends(get_current_superuser),
     session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     query = select(
@@ -108,10 +109,10 @@ async def get_bookings_for_confirm(
 )
 async def confirm_booking(
     booking_id: int, 
-    user: UserSchema = Depends(get_current_superuser),
+    current_user: UserSchema = Depends(get_current_superuser),
     session: AsyncSession = Depends(get_async_session)
 ) -> None:
-    return await change_booking_status(booking_id, session, user, 'confirmed')
+    return await change_booking_status(booking_id, session, current_user, 'confirmed')
 
 
 @router.post(
@@ -120,10 +121,10 @@ async def confirm_booking(
 )
 async def cancel_booking(
     booking_id: int, 
-    user: UserSchema = Depends(get_current_superuser),
+    current_user: UserSchema = Depends(get_current_superuser),
     session: AsyncSession = Depends(get_async_session)
 ) -> None:
-    return await change_booking_status(booking_id, session, user, 'cancelled')
+    return await change_booking_status(booking_id, session, current_user, 'cancelled')
 
 
 @router.post(
@@ -132,7 +133,7 @@ async def cancel_booking(
 )
 async def change_cost(
     cost_data: ChangeCostSchema, 
-    user: UserSchema = Depends(get_current_superuser),
+    current_user: UserSchema = Depends(get_current_superuser),
     session: AsyncSession = Depends(get_async_session)
 ) -> None:
     query = select(
@@ -141,11 +142,11 @@ async def change_cost(
         headset.c.id == cost_data.headset_id,
     )
     current_headset = (await session.execute(query)).fetchone()
-    print(current_headset.cost)
+    old_cost = current_headset.cost
     
     if not current_headset:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Headset not found')
-    if current_headset.cost == cost_data.new_cost:
+    if old_cost == cost_data.new_cost:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'Headset cost is already {cost_data.new_cost}')
     
     stmt = update(
@@ -158,5 +159,17 @@ async def change_cost(
 
     await session.execute(stmt)
     await session.commit()
+
+    if cost_data.new_cost < old_cost:
+        query = select(user.c.email).where(user.c.is_subscribed_to_email == True)
+        user_emails = (await session.execute(query)).fetchall()
+        for user_email in user_emails:
+            await send_email(
+                'notice',
+                user_email[0],
+                await get_headset_name(cost_data.headset_id, session),
+                cost_data.new_cost,
+                old_cost
+            )
 
     return 

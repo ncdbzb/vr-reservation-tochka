@@ -57,7 +57,10 @@ async def change_booking_status(booking_id: int, session: AsyncSession, current_
 
 
 async def send_email(*args) -> None:
-    email_result = send_email_task.delay(*args)
+    if len(args) == 3:
+        email_result = send_email_task.delay(status = args[0], user_email=args[1], headset_name=args[2], cost=args[3], old_cost=args[4])
+    else:
+        email_result = send_email_task.delay(*args)
     email_result = email_result.get()
     if email_result != 'success':
         raise HTTPException(status_code=500, detail='Error while sending email')

@@ -73,6 +73,7 @@ async def get_bookings(
 ) -> dict:
     start_of_day = datetime.combine(date, datetime.min.time())
     end_of_day = datetime.combine(date, datetime.max.time())
+    local_time_now = convert_time(datetime.now())
 
     query = select(
         booking.c.start_time,
@@ -82,6 +83,7 @@ async def get_bookings(
             booking.c.headset_id == headset_id,
             booking.c.status.in_(['confirmed', 'pending']),
             booking.c.start_time >= start_of_day,
+            booking.c.start_time > local_time_now,
             booking.c.end_time <= end_of_day
         )
     )

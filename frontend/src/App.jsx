@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Table, Switch, Modal, message, DatePicker } from "antd";
 import axios from "axios";
+import moment from "moment";
 import "antd/dist/reset.css"; // Импорт стилей Ant Design
 import "./App.css"; // Импорт пользовательских стилей
 import RegisterForm from './RegisterForm';
@@ -371,23 +372,25 @@ function App() {
           const endHour = new Date(slot.end_time).getHours();
           return record.key >= startHour && record.key < endHour;
         });
-  
+    
+        const isPast = selectedDate && selectedDate.isSame(moment(), 'day') && record.key < moment().hour();
+    
         if (user && user.is_superuser) {
           return isBusy ? 'Занято' : 'Свободно';
         }
-  
+    
         return (
           <Button
             type="primary"
             danger={isBooked}
             onClick={() => handleBooking(selectedHeadset, record.key)}
-            disabled={isBusy || isBooked}
+            disabled={isBusy || isBooked || isPast}
           >
-            {isBusy ? 'Занято' : isBooked ? 'Занято' : 'Забронировать'}
+            {isBusy ? 'Занято' : isBooked ? 'Занято' : isPast ? 'Прошло' : 'Забронировать'}
           </Button>
         );
       },
-    },
+    },    
     {
       title: "Booking Time",
       dataIndex: "bookingTime",
@@ -606,6 +609,7 @@ function App() {
           <DatePicker
             value={selectedDate}
             onChange={(date) => setSelectedDate(date)}
+            disabledDate={(current) => current && current < moment().startOf('day')}
           />
         </div>
         {user && user.is_superuser && (

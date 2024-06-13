@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from config.database import get_async_session
+from datetime import datetime
 from src.models.settings import settings
 from src.models.bookings import booking
 from src.models.headsets import headset
@@ -11,7 +12,8 @@ from src.schemas.booking_schema import ResponseBookingSchema
 from src.schemas.headset_schema import ChangeCostSchema
 from src.auth.utils.jwt_manager import get_current_superuser
 from src.utils.booking_utils import get_headset_name, change_booking_status, send_email
-from sqlalchemy import select, update
+from src.utils.convert_time import convert_time
+from sqlalchemy import select, update, and_
 
 
 router = APIRouter()
@@ -78,10 +80,14 @@ async def get_bookings_for_confirm(
     current_user: UserSchema = Depends(get_current_superuser),
     session: AsyncSession = Depends(get_async_session)
 ) -> dict:
+    local_time_now = convert_time(datetime.now())
     query = select(
         booking
     ).where(
-        booking.c.status == 'pending'
+        and_(
+            booking.c.status == 'pending',
+            booking.c.start_time > local_time_now
+        )
     )
 
     bookings = (await session.execute(query)).fetchall()

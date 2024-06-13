@@ -186,6 +186,11 @@ function App() {
       return;
     }
   
+    if (selectedDate.isSame(moment(), 'day') && hour <= moment().hour()) {
+      message.error('Невозможно забронировать прошедший слот');
+      return;
+    }
+  
     const bookingKey = `${headsetId}-${selectedDate.format('YYYY-MM-DD')}-${hour}`;
     if (bookings[bookingKey]) {
       setBookings((prevBookings) => {
@@ -225,7 +230,7 @@ function App() {
         message.error('Ошибка при создании бронирования');
       }
     }
-  };    
+  };  
 
   const handleAdminAction = async (action, bookingId) => {
     try {
@@ -373,7 +378,7 @@ function App() {
           return record.key >= startHour && record.key < endHour;
         });
     
-        const isPast = selectedDate && selectedDate.isSame(moment(), 'day') && record.key < moment().hour();
+        const isPast = selectedDate && selectedDate.isSame(moment(), 'day') && (record.key <= moment().hour());
     
         if (user && user.is_superuser) {
           return isBusy ? 'Занято' : 'Свободно';

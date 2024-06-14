@@ -147,12 +147,12 @@ async def book(
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e)
     
-    # await send_email(
-    #     booking_status,
-    #     'kostya.pershin.18@mail.ru',
-    #     await get_headset_name(booking_request.headset_id, session),
-    #     start_time,
-    #     end_time,
-    #     cost)
+    await send_email(
+        booking_status,
+        user.email,
+        await get_headset_name(booking_request.headset_id, session),
+        start_time,
+        end_time,
+        cost)
 
     return {'status': booking_status}

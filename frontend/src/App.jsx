@@ -181,6 +181,11 @@ function App() {
   };
 
   const handleBooking = async (headsetId, hour) => {
+    if (!user) {
+      message.error('Необходимо авторизоваться');
+      return;
+    }
+    
     if (!selectedDate) {
       message.error('Пожалуйста, выберите дату бронирования');
       return;

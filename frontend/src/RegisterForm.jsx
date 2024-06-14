@@ -8,7 +8,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const response = await axios.post('https://localhost/api/auth/register', {
+      const response = await axios.post('https://185.87.50.158/api/auth/register', {
         email: values.email,
         password: values.password,
       }, {

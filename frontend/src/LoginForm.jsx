@@ -8,7 +8,7 @@ const LoginForm = ({ onLoginSuccess }) => {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const response = await axios.post('https://localhost/api/auth/login', {
+      const response = await axios.post('https://185.87.50.158/api/auth/login', {
         email: values.email,
         password: values.password,
       }, {

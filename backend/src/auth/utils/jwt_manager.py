@@ -16,9 +16,9 @@ class JWTManager():
         self.response = Response(status_code=status)
         self.cookie_name = 'vr_headset_booking'
         self.max_age = COOKIE_LIFETIME,
-        self.secure = False,
-        self.httponly = False,
-        self.samesite = "lax"
+        self.secure = True,
+        self.httponly = True,
+        self.samesite = "none"
 
     def get_login_response_with_cookie(self, user_id: str) -> Response:
         self.response.set_cookie(

@@ -5,7 +5,7 @@ import axios from 'axios';
 const LogoutButton = ({ onLogout }) => {
   const handleLogout = async () => {
     try {
-      await axios.post('http://localhost/api/auth/logout', {}, {
+      await axios.post('https://localhost/api/auth/logout', {}, {
         withCredentials: true
       });
       message.success('Вы успешно вышли!');

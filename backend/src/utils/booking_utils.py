@@ -44,14 +44,14 @@ async def change_booking_status(booking_id: int, session: AsyncSession, current_
     await session.execute(stmt)
     await session.commit()
 
-    # await send_email(
-    #     booking_status,
-    #     (await session.execute(select(user.c.email).where(user.c.id == my_booking.user_id))).fetchone(),
-    #     await get_headset_name(my_booking.headset_id, session),
-    #     my_booking.start_time,
-    #     my_booking.end_time,
-    #     my_booking.cost
-    # )
+    await send_email(
+        booking_status,
+        (await session.execute(select(user.c.email).where(user.c.id == my_booking.user_id))).fetchone(),
+        await get_headset_name(my_booking.headset_id, session),
+        my_booking.start_time,
+        my_booking.end_time,
+        my_booking.cost
+    )
 
     return
 

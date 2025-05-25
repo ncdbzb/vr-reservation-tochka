@@ -24,3 +24,10 @@ class UserSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserUpdateSchema(BaseModel):
+    email: EmailStr
+
+    class Config:
+        from_attributes = True

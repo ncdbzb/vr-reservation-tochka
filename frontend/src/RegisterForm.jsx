@@ -8,7 +8,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const response = await axios.post('https://localhost/api/auth/register', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/register`, {
         email: values.email,
         password: values.password,
       }, {

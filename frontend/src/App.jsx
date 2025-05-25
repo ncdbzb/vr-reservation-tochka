@@ -34,7 +34,7 @@ function App() {
       const fetchBusySlots = async () => {
         try {
           const formattedDate = selectedDate.format('YYYY-MM-DD'); // Форматирование даты
-          const response = await axios.get(`https://localhost/api/bookings/${selectedHeadset}/unavailable?date=${formattedDate}`, {
+          const response = await axios.get(`${import.meta.env.VITE_API_URL}/bookings/${selectedHeadset}/unavailable?date=${formattedDate}`, {
             withCredentials: true
           });
           setBusySlots(response.data.result);
@@ -53,7 +53,7 @@ function App() {
       try {
         // Проверяем, является ли пользователь администратором
         if (user && user.is_superuser) {
-          const response = await axios.get('https://localhost/api/bookings/autoconfirm', {
+          const response = await axios.get(`${import.meta.env.VITE_API_URL}/bookings/autoconfirm`, {
             withCredentials: true
           });
           setAutoConfirm(response.data.autoconfirm);
@@ -72,7 +72,7 @@ function App() {
       try {
         // Проверяем, авторизован ли пользователь
         if (user) {
-          const response = await axios.get('https://localhost/api/users/me', {
+          const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/me`, {
             withCredentials: true
           });
           setEmailNotification(response.data.is_subscribed_to_email);
@@ -88,7 +88,7 @@ function App() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get('https://localhost/api/users/me', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/me`, {
           withCredentials: true
         });
         setUser(response.data);
@@ -109,7 +109,7 @@ function App() {
   useEffect(() => {
     const fetchHeadsets = async () => {
       try {
-        const response = await axios.get('https://localhost/api/bookings/headsets', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/bookings/headsets`, {
           withCredentials: true
         });
         setVrHeadsets(response.data.result);
@@ -132,7 +132,7 @@ function App() {
       // Проверяем выбранный headset
       if (selectedHeadset !== null) {
         // Отправляем запрос на изменение стоимости
-        await axios.post('https://localhost/api/bookings/change_cost', {
+        await axios.post(`${import.meta.env.VITE_API_URL}/bookings/change_cost`, {
           headset_id: selectedHeadset,
           new_cost: newCost
         }, {
@@ -163,7 +163,7 @@ function App() {
     if (selectedHeadset !== id && selectedDate !== null) {
       try {
         const formattedDate = selectedDate.format('YYYY-MM-DD'); // Форматирование даты
-        const response = await axios.get(`https://localhost/api/bookings/${id}/unavailable?date=${formattedDate}`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/bookings/${id}/unavailable?date=${formattedDate}`, {
           withCredentials: true
         });
         setBusySlots(response.data.result);
@@ -210,7 +210,7 @@ function App() {
       endTime.setHours(hour + 1);
   
       try {
-        const response = await axios.post('https://localhost/api/bookings/book', {
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/bookings/book`, {
           headset_id: headsetId,
           start_time: startTime.toISOString(),
           end_time: endTime.toISOString()
@@ -239,7 +239,7 @@ function App() {
 
   const handleAdminAction = async (action, bookingId) => {
     try {
-      await axios.post(`https://localhost/api/bookings/${bookingId}/${action}`, {}, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/bookings/${bookingId}/${action}`, {}, {
         withCredentials: true
       });
       setAdminBookings((prevBookings) => prevBookings.filter(booking => booking.booking_id !== bookingId));
@@ -259,7 +259,7 @@ function App() {
       const newAutoConfirm = !autoConfirm;
   
       // Отправляем запрос на сервер с новым значением
-      const response = await axios.post('https://localhost/api/bookings/autoconfirm', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/bookings/autoconfirm`, {
         autoconfirm: newAutoConfirm
       }, {
         withCredentials: true
@@ -281,7 +281,7 @@ function App() {
     try {
        // Проверяем наличие активного пользователя
         const newEmailNotification = !emailNotification; // Получаем новое значение
-        const response = await axios.post('https://localhost/api/email/subscription', {
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/email/subscription`, {
           is_subscribed_to_email: newEmailNotification // Отправляем новое значение
         }, {
           withCredentials: true
@@ -311,7 +311,7 @@ function App() {
 
   const showMyBookingsModal = async () => {
     try {
-      const response = await axios.get('https://localhost/api/bookings/my', {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/bookings/my`, {
         withCredentials: true
       });
       setMyBookings(response.data.result); // Устанавливаем бронирования в состояние
@@ -327,7 +327,7 @@ function App() {
 
   const showAdminBookingsModal = async () => {
     try {
-      const response = await axios.get('https://localhost/api/bookings/for_confirm', {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/bookings/for_confirm`, {
         withCredentials: true
       });
       setAdminBookings(response.data.result);
@@ -343,7 +343,7 @@ function App() {
 
   const handleCancelBooking = async (bookingId) => {
     try {
-      await axios.post(`https://localhost/api/bookings/${bookingId}/cancel_my`, {}, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/bookings/${bookingId}/cancel_my`, {}, {
         withCredentials: true
       });
       setMyBookings((prevBookings) => prevBookings.filter(booking => booking.booking_id !== bookingId));

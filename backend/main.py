@@ -2,7 +2,6 @@ import uvicorn
 import asyncio
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-# from fastapi_jsonrpc import API, JsonRpcRouter
 from src.auth.auth_router import router as auth_router
 from src.routers.users_router import router as users_router
 from src.routers.headsets_router import router as headset_router
@@ -10,7 +9,7 @@ from src.routers.bookings_router import router as booking_router
 from src.routers.email_router import router as email_router
 from src.routers.admin_router import router as admin_router
 
-from config.config import CORS_ORIGINS
+from config.config import SERVER_DOMAIN
 from config.init_db import init_db
 
 
@@ -21,7 +20,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=[
+        f"http://{SERVER_DOMAIN}", 
+        f"https://{SERVER_DOMAIN}"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

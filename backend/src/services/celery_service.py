@@ -7,12 +7,12 @@ from src.utils.convert_time import convert_time
 from src.services.email_service import EmailService
 from src.models.bookings import booking
 from sqlalchemy import select, and_, update
-from config.config import REDIS_PORT
+from config.config import REDIS_URL
 from config.database import async_session_maker
 import asyncio
 
 
-celery = Celery('task', broker=f'redis://redis:{REDIS_PORT}/0', result_backend=f'redis://redis:{REDIS_PORT}/0')
+celery = Celery('task', broker=REDIS_URL, result_backend=REDIS_URL)
 
 celery.conf.beat_schedule = {
     'cancel-pending-bookings-every-hour': {

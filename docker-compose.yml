@@ -34,7 +34,7 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: frontend
     env_file:
-      - .env
+      - ./frontend/.env
     ports:
       - "443:443"
     restart: always
@@ -43,10 +43,8 @@ services:
 
   redis:
     image: redis:7.0.11-alpine
-    env_file:
-      - .env
     ports:
-      - ${REDIS_PORT}:${REDIS_PORT}
+      - 6379:6379
 
   # pgadmin:
   #   image: dpage/pgadmin4:latest

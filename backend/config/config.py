@@ -16,6 +16,13 @@ JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM")
 COOKIE_LIFETIME = int(os.environ.get("COOKIE_LIFETIME"))
 JWT_TOKEN_LIFETIME = int(os.environ.get("JWT_TOKEN_LIFETIME"))
 
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
+SMTP_USER = os.environ.get("SMTP_USER")
+if not SMTP_PASSWORD or not SMTP_USER:
+    print('SMTP configuration not set in environment')
+SMTP_HOST = os.environ.get("SMTP_HOST")
+SMTP_PORT = int(os.environ.get("SMTP_PORT"))
+
 REDIS_URL = os.environ.get("REDIS_URL")
 
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")

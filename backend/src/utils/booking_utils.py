@@ -5,7 +5,7 @@ from src.models.users import user
 from src.schemas.user_schema import UserSchema
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.services.celery_service import send_email_task
+from src.services.email_service import send_email_task
 
 
 async def get_headset_name(headset_id: int, session: AsyncSession) -> str:
@@ -59,10 +59,9 @@ async def change_booking_status(booking_id: int, session: AsyncSession, current_
 
 async def send_email(*args) -> None:
     if len(args) == 3:
-        email_result = send_email_task.delay(status = args[0], user_email=args[1], headset_name=args[2], cost=args[3], old_cost=args[4])
+        email_result = send_email_task(status = args[0], user_email=args[1], headset_name=args[2], cost=args[3], old_cost=args[4])
     else:
-        email_result = send_email_task.delay(*args)
-    email_result = email_result.get()
+        email_result = send_email_task(*args)
     if email_result != 'success':
         raise HTTPException(status_code=500, detail='Error while sending email')
     return

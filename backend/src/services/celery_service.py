@@ -1,10 +1,8 @@
-from pydantic import EmailStr
 from celery import Celery, current_app
 from celery.signals import worker_ready
 from celery.schedules import crontab
 from datetime import datetime, timedelta
 from src.utils.convert_time import convert_time
-from src.services.email_service import EmailService
 from src.models.bookings import booking
 from sqlalchemy import select, and_, update
 from config.config import REDIS_URL
@@ -20,30 +18,6 @@ celery.conf.beat_schedule = {
         'schedule': crontab(minute=0, hour='*'),
     },
 }
-
-@celery.task
-def send_email_task(
-    status: str,
-    user_email: EmailStr,
-    headset_name: str,
-    start_time: datetime,
-    end_time: datetime,
-    cost: int | None = None,
-    old_cost: int | None = None,
-) -> str:
-    try:
-        if status == 'confirmed':
-            EmailService.send_confirm_email(user_email, headset_name, start_time, end_time, cost)
-        elif status == 'pending':
-            EmailService.send_pendign_email(user_email, headset_name, start_time, end_time, cost)
-        elif status == 'cancelled':
-            EmailService.send_cancel_email(user_email, headset_name, start_time, end_time)
-        elif status == 'notice':
-            EmailService.send_notice_email(user_email, headset_name, old_cost, cost)
-        return 'success'
-    except Exception as e:
-        print(e)
-        return str(e)
 
 
 @celery.task

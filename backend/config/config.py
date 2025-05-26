@@ -11,6 +11,8 @@ DB_PASS = os.environ.get("DB_PASS")
 
 SERVER_DOMAIN = os.environ.get("SERVER_DOMAIN")
 
+EMAIL_SENDER_URL = os.environ.get("EMAIL_SENDER_URL")
+
 SECRET_JWT = os.environ.get("SECRET_JWT")
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM")
 COOKIE_LIFETIME = int(os.environ.get("COOKIE_LIFETIME"))
